@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #1a1a2e;
+
+  /* Brand colors */
+  --color-brand-purple: #534AB7;
+  --color-brand-purpleLight: #7F77DD;
+  --color-brand-purplePale: #EEEDFE;
+  --color-brand-green: #3B6D11;
+  --color-brand-greenLight: #C0DD97;
+  --color-brand-greenPale: #EAF3DE;
+
+  /* Font family */
+  --font-sans: 'Zen Maru Gothic', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+}
+
+/* Portrait lock */
+@media (orientation: landscape) {
+  .portrait-lock-overlay {
+    display: flex;
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+/* Custom border-3 utility */
+.border-3 {
+  border-width: 3px;
+}
+
+/* Scrollbar styling for children's app */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 3px;
+}
+
+/* Safe area padding for mobile */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* Star animation */
+@keyframes star-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-star-pop {
+  animation: star-pop 0.3s ease-out forwards;
+}
+
+/* Sparkle animation for streak bonus */
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+.animate-sparkle {
+  animation: sparkle 0.6s ease-in-out;
+}
+
+/* Gradient text utility */
+.text-gradient-purple {
+  background: linear-gradient(135deg, #534AB7, #7F77DD);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
