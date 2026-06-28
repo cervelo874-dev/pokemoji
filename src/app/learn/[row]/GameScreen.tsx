@@ -37,6 +37,7 @@ export default function GameScreen({ params }: PageProps) {
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSparkle, setShowSparkle] = useState(false);
   const [sessionCorrectPokemons, setSessionCorrectPokemons] = useState<PokemonInfo[]>([]);
+  const [showNextButton, setShowNextButton] = useState(false);
 
   const rowMeta = rowId === 'random'
     ? { id: 'random' as RowId, label: 'ごちゃまぜテスト', kanaList: [] }
@@ -73,6 +74,24 @@ export default function GameScreen({ params }: PageProps) {
       return () => clearTimeout(timer);
     }
   }, [currentKana, currentIndex, isLoaded, speakKana]);
+
+  const advanceQuestion = useCallback(() => {
+    setShowNextButton(false);
+    if (currentIndex + 1 >= questions.length) {
+      // Row complete!
+      if (rowId !== 'random') {
+        unlockNextRow(rowId);
+      }
+      if (rowMeta) {
+        speakClear(rowMeta.label);
+      }
+      setShowClearModal(true);
+    } else {
+      setCurrentIndex(prev => prev + 1);
+      setChoiceStates(['idle', 'idle', 'idle', 'idle']);
+      setAnswered(false);
+    }
+  }, [currentIndex, questions.length, rowId, unlockNextRow, rowMeta, speakClear]);
 
   // Handle normal quiz choice
   const handleChoiceTap = useCallback((choiceIndex: number) => {
@@ -124,9 +143,10 @@ export default function GameScreen({ params }: PageProps) {
       speakWrong(quiz.correctChoice.name);
       recordAnswer(currentKana, rowId, false);
 
-      setTimeout(() => advanceQuestion(), 1200);
+      // Do NOT auto advance, show Next button instead
+      setShowNextButton(true);
     }
-  }, [answered, quiz, streak, currentKana, rowId, recordAnswer, speakCorrect, speakWrong]);
+  }, [answered, quiz, streak, currentKana, rowId, recordAnswer, speakCorrect, speakWrong, advanceQuestion]);
 
   // Handle reverse quiz choice
   const handleReverseChoiceTap = useCallback((choiceIndex: number) => {
@@ -159,26 +179,11 @@ export default function GameScreen({ params }: PageProps) {
       setStreak(0);
       speakWrong(reverseQuiz.correctKana);
       recordAnswer(currentKana, rowId, false);
-      setTimeout(() => advanceQuestion(), 1200);
+      
+      // Do NOT auto advance, show Next button instead
+      setShowNextButton(true);
     }
-  }, [answered, reverseQuiz, currentKana, rowId, recordAnswer, speakCorrect, speakWrong]);
-
-  const advanceQuestion = useCallback(() => {
-    if (currentIndex + 1 >= questions.length) {
-      // Row complete!
-      if (rowId !== 'random') {
-        unlockNextRow(rowId);
-      }
-      if (rowMeta) {
-        speakClear(rowMeta.label);
-      }
-      setShowClearModal(true);
-    } else {
-      setCurrentIndex(prev => prev + 1);
-      setChoiceStates(['idle', 'idle', 'idle', 'idle']);
-      setAnswered(false);
-    }
-  }, [currentIndex, questions.length, rowId, unlockNextRow, rowMeta, speakClear]);
+  }, [answered, reverseQuiz, currentKana, rowId, recordAnswer, speakCorrect, speakWrong, advanceQuestion]);
 
   const handleNextRow = useCallback(() => {
     if (rowId === 'random') {
@@ -219,7 +224,7 @@ export default function GameScreen({ params }: PageProps) {
   const stars = Array.from({ length: 3 }, (_, i) => i < correctCount);
 
   return (
-    <main className="min-h-dvh bg-gradient-to-b from-brand-purplePale to-white flex flex-col">
+    <main className="min-h-dvh bg-gradient-to-b from-brand-purplePale to-white flex flex-col pb-24">
       {/* Header */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-2">
@@ -358,6 +363,30 @@ export default function GameScreen({ params }: PageProps) {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Next Button for Wrong Answers */}
+      <AnimatePresence>
+        {showNextButton && (
+          <motion.div
+            className="fixed bottom-6 left-0 right-0 px-6 z-30 flex justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <button
+              onClick={advanceQuestion}
+              className="w-full max-w-md py-4 rounded-2xl bg-brand-purple text-white font-black text-xl shadow-xl hover:bg-brand-purpleLight active:scale-98 transition-all flex items-center justify-center gap-2"
+              aria-label="次の問題へ"
+            >
+              <span>つぎへ すすむ</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 12H19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 5L19 12L12 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Clear Modal */}
       <ClearModal
