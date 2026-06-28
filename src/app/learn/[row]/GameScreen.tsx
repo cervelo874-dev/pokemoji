@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChoiceState, RowId, PokemonInfo, QuizChoice } from '@/types';
+import { ChoiceState, RowId, PokemonInfo, QuizChoice, QuizQuestion, ReverseQuizQuestion } from '@/types';
 import { ROW_META, getKanaEntry, getRowEntries } from '@/data/hiraganaData';
 import { generateQuiz, generateReverseQuiz, generateRowQuestions, generateRandomQuestions } from '@/utils/quiz';
 import { useProgress } from '@/hooks/useProgress';
@@ -38,6 +38,8 @@ export default function GameScreen({ params }: PageProps) {
   const [showSparkle, setShowSparkle] = useState(false);
   const [sessionCorrectPokemons, setSessionCorrectPokemons] = useState<PokemonInfo[]>([]);
   const [showNextButton, setShowNextButton] = useState(false);
+  const [quiz, setQuiz] = useState<QuizQuestion | null>(null);
+  const [reverseQuiz, setReverseQuiz] = useState<ReverseQuizQuestion | null>(null);
 
   const rowMeta = rowId === 'random'
     ? { id: 'random' as RowId, label: 'ごちゃまぜテスト', kanaList: [] }
@@ -61,9 +63,22 @@ export default function GameScreen({ params }: PageProps) {
   const currentEntry = currentKana ? getKanaEntry(currentKana) : undefined;
   const isSpecial = currentEntry?.special ?? false;
 
-  // Generate quiz data
-  const quiz = currentEntry && !isSpecial ? generateQuiz(currentEntry) : null;
-  const reverseQuiz = currentEntry && isSpecial ? generateReverseQuiz(currentKana) : null;
+  // Generate quiz data only when currentKana changes to avoid re-shuffling on render/state updates
+  useEffect(() => {
+    if (!currentKana || !currentEntry) {
+      setQuiz(null);
+      setReverseQuiz(null);
+      return;
+    }
+
+    if (isSpecial) {
+      setQuiz(null);
+      setReverseQuiz(generateReverseQuiz(currentKana));
+    } else {
+      setQuiz(generateQuiz(currentEntry));
+      setReverseQuiz(null);
+    }
+  }, [currentKana, currentEntry, isSpecial]);
 
   // Auto-speak on new question
   useEffect(() => {
