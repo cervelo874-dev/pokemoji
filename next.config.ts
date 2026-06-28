@@ -4,7 +4,8 @@ import type { NextConfig } from "next";
 const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // Only enforce static export when compiling for GitHub Pages inside GitHub Actions
+  output: isGithubActions ? 'export' : undefined,
   images: {
     unoptimized: true,
   },
